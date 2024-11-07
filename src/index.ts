@@ -71,7 +71,7 @@ AppDataSource.initialize().then(async () => {
                                                                                                                     day: 'numeric',
                                                                                                                     hour: "numeric",minute: "numeric" })}):
                                     </h5> 
-                                    <a href="http://192.168.100.6:4000/activate/${result.id}/${result.activationToken}">Activar cuenta</a>`
+                                    <a href="${process.env.EF_MAIN_LOCAL}/activate/${result.id}/${result.activationToken}">Activar cuenta</a>`
                                 await notificationController.sendMail(result.email, "Activar cuenta EyesFood", activationMail)
                                 .then(response => {
                                     console.log(response)
