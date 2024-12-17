@@ -114,6 +114,13 @@ AppDataSource.initialize().then(async () => {
                                     <a href=${process.env.EF_MAIN_REMOTE}>Ir a EyesFood</a>`
                                     await notificationController.sendMail(oldUser.email, "Cuenta EyesFood restaurada", mailContent)
                             }
+                            if (content.lostPass){
+                                const mailContent = `<h5> 
+                                    ${oldUser.name}, para cambiar tu contraseña, haz click en el siguiente link
+                                    </h5>
+                                    <a href=${process.env.EF_MAIN_REMOTE}/login/reset/${content.id}/${content.activationToken}>Cambiar contraseña</a>`
+                                await notificationController.sendMail(oldUser.email, "Eyesfood - Reestablecer contraseña", mailContent)
+                            }
                         }
                         console.log("i should update the user with id: ", trimmedContent)
                         await userController.update(content)
@@ -143,6 +150,32 @@ AppDataSource.initialize().then(async () => {
                             let removedUser = await userController.remove(content)
                             console.log(removedUser)
                         }
+                    }
+                    else if (action=="resetActivate"){
+                        let content = JSON.parse(msg.content.toString())
+                        let trimmedContent = {...content}
+                        await userController.create(trimmedContent)
+                        .then(async result=>{
+                            console.log(result)
+                            if (result.activationToken){
+                                const activationMail = `<h5>
+                                    Siga el siguiente enlace para activar su cuenta de EyesFood
+                                    (fecha de vencimiento: ${result.activationExpire.toLocaleDateString("es-CL", { year: 'numeric', 
+                                                                                                                    month: 'long', 
+                                                                                                                    day: 'numeric',
+                                                                                                                    hour: "numeric",minute: "numeric" })}):
+                                    </h5> 
+                                    <a href="${process.env.EF_MAIN_REMOTE}/activate/${result.id}/${result.activationToken}">Activar cuenta</a>`
+                                await notificationController.sendMail(result.email, "Activar cuenta EyesFood", activationMail)
+                                .then(response => {
+                                    console.log(response)
+                                })
+                                .catch(error => {
+                                    console.log(error)
+                                })
+                            }
+                        })
+                        .catch(error=>console.log(error))
                     }
                 }
             }, {noAck: true})
