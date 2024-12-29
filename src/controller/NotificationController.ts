@@ -43,6 +43,7 @@ export class NotificationController {
         const { n } = req.query
         const withUser = req.query.wu === "true"
         const onlyGlobal = req.query.og === "true"
+        const onlyActive = req.query.oa === "true"
         const relations = []
         if (withUser){
             relations.push("userHasNotification", "userHasNotification.user")
@@ -64,6 +65,15 @@ export class NotificationController {
         if (onlyGlobal){
             const notifications = await this.notificationRepository.find({
                 where: {isGlobal: true},
+                relations: relations,
+                order: {updatedAt: "DESC"}
+            })
+            return notifications
+        }
+
+        if (onlyActive){
+            const notifications = await this.notificationRepository.find({
+                where: {isActive: true, isGlobal: true},
                 relations: relations,
                 order: {updatedAt: "DESC"}
             })
@@ -141,7 +151,7 @@ export class NotificationController {
     }
 
     async updateSent(id:string, lastSentAt: Date){
-        const updatedNotif = await this.notificationRepository.update(id, {lastSentAt})
+        const updatedNotif = await this.notificationRepository.update(id, {lastSentAt, isActive: false})
         if (updatedNotif.affected===1){
             return this.notificationRepository.findOne({where: {id:id}})
         }

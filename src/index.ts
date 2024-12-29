@@ -56,10 +56,12 @@ AppDataSource.initialize().then(async () => {
             channel.consume("Notification_Accounts", async (msg)=>{
                 let action = msg.fields.routingKey.split(".")[1]
                 let entity = msg.fields.routingKey.split(".")[0]
+                console.log("action: ", action, "  entity: ", entity)
                 if (entity==="user"){
                     if (action=="create"){
                         let content = JSON.parse(msg.content.toString())
-                        let trimmedContent = {...content}
+                        let trimmedContent = {...content, storeProfile:undefined, expertProfile:undefined, userHasRole:undefined}
+                        console.log("i should create the user with name ", content.name)
                         await userController.create(trimmedContent)
                         .then(async result=>{
                             console.log(result)
@@ -87,9 +89,11 @@ AppDataSource.initialize().then(async () => {
                         let content = JSON.parse(msg.content.toString())
                         let trimmedContent = {...content, expertProfile: undefined, storeProfile:undefined, userHasRole:undefined}
                         let oldUser = await userController.oneById(content.id)
+                        console.log("old user: ", oldUser)
                         if (oldUser){
                             if (oldUser.isPending){
                                 if (!oldUser.isActive && content.isActive){
+                                    console.log("voy a informar al usuario que su cuenta fue activada")
                                     const mailContent = `<h5> 
                                     Buenas noticias ${oldUser.name}, tu solicitud ha sido aprobada y ahora puedes iniciar sesión en EyesFood.
                                     </h5>
@@ -114,6 +118,15 @@ AppDataSource.initialize().then(async () => {
                                     <a href=${process.env.EF_MAIN_REMOTE}>Ir a EyesFood</a>`
                                     await notificationController.sendMail(oldUser.email, "Cuenta EyesFood restaurada", mailContent)
                             }
+                            else if (!oldUser.isActive && content.isActive){
+                                console.log("voy a informar al usuario que su cuenta fue reactivada")
+                                const mailContent = `<h5> 
+                                Buenas noticias ${oldUser.name}, tu cuenta ha sido reactivada.
+                                </h5>
+                                <a href=${process.env.EF_MAIN_REMOTE}>Ir a EyesFood</a>`
+
+                                await notificationController.sendMail(oldUser.email, "Cuenta EyesFood reactivada", mailContent)
+                            }
                             if (content.lostPass){
                                 const mailContent = `<h5> 
                                     ${oldUser.name}, para cambiar tu contraseña, haz click en el siguiente link
@@ -122,16 +135,16 @@ AppDataSource.initialize().then(async () => {
                                 await notificationController.sendMail(oldUser.email, "Eyesfood - Reestablecer contraseña", mailContent)
                             }
                         }
-                        console.log("i should update the user with id: ", trimmedContent)
                         await userController.update(content)
                         .then(async result=>{
-                            console.log(result)
+                            
                         })
                         .catch(error=>console.log(error))
                     }
                     else if (action=="remove"){
                         let content = JSON.parse(msg.content.toString())
                         let oldUser = await userController.oneById(content)
+                        console.log("i should delete ", content.name)
                         if (oldUser){
                             if (oldUser.isActive){
                                 const mailContent = `<h5> 
@@ -142,13 +155,16 @@ AppDataSource.initialize().then(async () => {
                             else if (oldUser.isPending){
                                 const mailContent = `<h5> 
                                 ${oldUser.name}, tu solicitud ha sido rechazada. Puedes comunicarte con un administrador
-                                enviando un coreo a este mismo email.
+                                enviando un correo a este mismo email.
                                 </h5>`
                                 await notificationController.sendMail(oldUser.email, "Solicitud de cuenta EyesFood rechazada", mailContent)
                             }
                             console.log("i should delete the user with id: ", content)
                             let removedUser = await userController.remove(content)
                             console.log(removedUser)
+                        }
+                        else{
+                            console.log("user doesn't exist")
                         }
                     }
                     else if (action=="resetActivate"){
@@ -176,6 +192,20 @@ AppDataSource.initialize().then(async () => {
                             }
                         })
                         .catch(error=>console.log(error))
+                    }
+                    else if (action==="notify"){
+                        let content = JSON.parse(msg.content.toString())
+                        let user = await userController.oneById(content.id)
+                        if (user){
+                            const mail = `<h5>${content.message}</h5>`
+                            await notificationController.sendMail(user.email, "Cuenta Eyesfood desactivada", mail)
+                            .then(response => {
+                                console.log(response)
+                            })
+                            .catch(error => {
+                                console.log(error)
+                            })
+                        }   
                     }
                 }
             }, {noAck: true})

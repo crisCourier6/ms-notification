@@ -16,6 +16,9 @@ export class Notification {
     @Column({default: false})
     isGlobal: boolean
 
+    @Column({default: true})
+    isActive: boolean
+
     @CreateDateColumn()
     createdAt: Date
 
