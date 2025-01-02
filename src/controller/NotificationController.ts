@@ -1,16 +1,13 @@
 import { AppDataSource } from "../data-source"
 import { NextFunction, Request, Response } from "express"
-import { User } from "../entity/User"
-import { v4 as uuidv4, v6 as uuidv6 } from 'uuid';
 import "dotenv/config"
-import axios from "axios"
 import { Notification } from "../entity/Notification";
 
 const path = require("path")
 const nodeMailer = require("nodemailer")
 
 export class NotificationController {
-    private notificationRepository = AppDataSource.getRepository(Notification)
+    private readonly notificationRepository = AppDataSource.getRepository(Notification)
 
     async sendMail(email: string, subject: String, content: any){
         const transporter = nodeMailer.createTransport({

@@ -1,11 +1,10 @@
 import { AppDataSource } from "../data-source"
 import { NextFunction, Request, Response } from "express"
 import { UserHasNotification } from "../entity/UserHasNotification"
-import axios from "axios"
 
 export class UserHasNotificationController {
 
-    private userHasNotificationRepository = AppDataSource.getRepository(UserHasNotification)
+    private readonly userHasNotificationRepository = AppDataSource.getRepository(UserHasNotification)
 
     async all(req:Request, res: Response) {
         const { u, n } = req.query

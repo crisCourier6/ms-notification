@@ -1,6 +1,5 @@
 import { NextFunction, Request, Response } from "express"
 import { Channel } from "amqplib"
-import axios from "axios"
 import "dotenv/config"
 import { UserController } from "./UserController"
 import { NotificationController } from "./NotificationController"
@@ -9,9 +8,9 @@ import { Notification } from "../entity/Notification"
 
 export class MainController{
 
-    private notificationController = new NotificationController
-    private userHasNotificationController = new UserHasNotificationController
-    private userController = new UserController
+    private readonly notificationController = new NotificationController
+    private readonly userHasNotificationController = new UserHasNotificationController
+    private readonly userController = new UserController
     // user rates expert
 
     // notificationAll() retorna todos los diarios alimenticios
